@@ -1,0 +1,35 @@
+# Environment files
+.env
+.env.local
+.env*.local
+
+# Dependencies
+node_modules/
+.venv/
+venv/
+
+# Build outputs
+.next/
+dist/
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads
+backend/data/uploads/
+
+# Cache
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+
+# Logs
+*.log
+npm-debug.log*
