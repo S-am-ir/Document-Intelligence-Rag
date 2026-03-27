@@ -706,7 +706,7 @@ Frontend                          Backend
    │    processed: [...]}           │
 ```
 
-Processing takes ~77s for an 18-page PDF. The upload HTTP request blocks until complete.
+Processing takes ~40s for an 18-page PDF. The upload HTTP request blocks until complete.
 
 ### 11.2 Query Flow (SSE)
 
