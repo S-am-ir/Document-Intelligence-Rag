@@ -49,7 +49,7 @@ The system retrieves Figure 1 (page 2) showing accuracy scaling with ensemble si
 
 | Stage | Time | Notes |
 |-------|------|-------|
-| Document upload (first time) | ~77s | Docling CUDA parsing + VLM captioning |
+| Document upload (first time) | ~40s | Docling CUDA parsing + VLM captioning |
 | Subsequent queries | ~15s | Skip ingestion, retrieval + LLM only |
 | VLM captioning (14 images) | ~1.1s | Parallel via ThreadPoolExecutor |
 | Embedding (51 chunks) | ~2s | nomic-embed-text-v1.5 on CUDA |
