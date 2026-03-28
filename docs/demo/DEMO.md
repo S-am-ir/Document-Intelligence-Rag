@@ -4,7 +4,7 @@ Screenshots from a live session processing the research paper "More Agents Is Al
 
 ## Query 1: "explain the agent forest diagram"
 
-The system correctly retrieves the Agent Forest flowchart (Figure 2, page 4) which shows the two-phase sampling-and-voting process.
+The system correctly retrieves the Agent Forest flowchart (Figure 2, page 4) along with explaining it which shows the two-phase sampling-and-voting process.
 
 ![Agent Forest Diagram Query](query_1_with_response.png)
 
