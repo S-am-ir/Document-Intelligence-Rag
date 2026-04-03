@@ -18,17 +18,11 @@ export type AgentEvent = {
 
 export type RetrievedImage = {
   image_id: string
-  image_b64: string
+  image_b64?: string
   caption: string
+  source?: string
+  page?: number
 }
-
-export type StreamEvent =
-  | { type: "start"; session_id: string }
-  | { type: "agent_event"; event: AgentEvent }
-  | { type: "final"; output: string; images: { image_id: string; caption: string; source: string; page: number }[] }
-  | { type: "image"; image_id: string; image_b64: string; caption: string }
-  | { type: "error"; message: string; trace?: string }
-  | { type: "done" }
 
 export type UserSession = {
   session_id: string
@@ -106,50 +100,23 @@ export async function deleteFile(sessionId: string, filename: string): Promise<v
 }
 
 
-export async function streamQuery(
+export async function queryDocuments(
   query: string,
   sessionId: string,
   uploadedFiles: UploadedFile[],
-  onEvent: (event: StreamEvent) => void,
-): Promise<void> {
+): Promise<{ output: string; images: RetrievedImage[] }> {
   const formData = new FormData()
   formData.append("query", query)
   formData.append("session_id", sessionId)
   formData.append("uploaded_files", JSON.stringify(uploadedFiles))
 
-  const res = await fetch(`${BACKEND_URL}/api/query/stream`, {
+  const res = await fetch(`${BACKEND_URL}/api/query`, {
     method: "POST",
     body: formData,
   })
   if (!res.ok) throw new Error(`Backend error: ${res.status}`)
 
-  const reader = res.body!.getReader()
-  const decoder = new TextDecoder()
-  let buffer = ""
-
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
-    buffer += decoder.decode(value, { stream: true })
-    const lines = buffer.split("\n")
-    buffer = lines.pop() || ""
-    for (const line of lines) {
-      if (line.startsWith("data: ")) {
-        try {
-          onEvent(JSON.parse(line.slice(6)) as StreamEvent)
-        } catch {
-          /* skip malformed */
-        }
-      }
-    }
-  }
-
-  // Process any remaining data in the buffer
-  if (buffer.trim().startsWith("data: ")) {
-    try {
-      onEvent(JSON.parse(buffer.trim().slice(6)) as StreamEvent)
-    } catch {
-      /* skip malformed */
-    }
-  }
+  const data = await res.json()
+  if (data.error) throw new Error(data.error)
+  return { output: data.output, images: data.images || [] }
 }

@@ -428,7 +428,7 @@ class AgentState(TypedDict):
     retry_count: int                   # Number of reflection retries (max 2)
     final_answer: Optional[str]        # Generated answer
     retrieved_images: List[dict]       # Relevant images for display
-    stream_events: Annotated[List, _merge_lists]  # SSE events to frontend
+    stream_events: Annotated[List, _merge_lists]  # Agent events for frontend
 ```
 
 ### 6.2 Graph Structure
@@ -489,7 +489,7 @@ Each worker independently calls `query_documents_raw(sub_query, session_id, top_
 
 **generate_node**: Sends all context to LLM with instructions to write as if analyzing figures directly. Returns grounded answer.
 
-**final_node**: Carries forward `final_answer`, `stream_events`, and `retrieved_images` to the SSE handler.
+**final_node**: Carries forward `final_answer`, `stream_events`, and `retrieved_images` to the response handler.
 
 ### 6.4 Conditional Edges
 
@@ -644,9 +644,9 @@ img = fetch_image(image_id)  # SELECT from doc_images
 
 ### 9.4 Image Delivery to Frontend
 
-Images are sent via two SSE events:
+Images are included in the response:
 1. `final` event: includes image metadata (id, caption, source, page) in the `images` array
-2. `image` event: includes the full `image_b64` data separately (avoids bloating the final event)
+2. Full `image_b64` data is included in the images array
 
 ---
 
@@ -708,45 +708,29 @@ Frontend                          Backend
 
 Processing takes ~40s for an 18-page PDF. The upload HTTP request blocks until complete.
 
-### 11.2 Query Flow (SSE)
+### 11.2 Query Flow
 
 ```
 Frontend                          Backend
    │                                │
-   │── POST /api/query/stream ─────►│
+   │── POST /api/query ────────────►│
    │   session_id + query + files   │
-   │                                │
-   │◄── data: {"type":"start"} ────│
    │                                │── ingest_node
-   │◄── data: {"type":"agent",─────│
-   │     "event":{...}}            │── decompose_node
-   │◄── data: {"type":"agent",─────│
-   │     "event":{...}}            │── retrieve (parallel)
-   │◄── data: {"type":"agent",─────│
-   │     "event":{...}}            │── rerank
-   │◄── data: {"type":"agent",─────│
-   │     "event":{...}}            │── reflect
-   │◄── data: {"type":"agent",─────│
-   │     "event":{...}}            │── generate
-   │◄── data: {"type":"final",─────│
-   │     "output":"...",            │
-   │     "images":[...]}           │
-   │◄── data: {"type":"image",─────│  (one per image)
-   │     "image_id":"...",         │
-   │     "image_b64":"..."}        │
-   │◄── data: {"type":"done"} ────│
+   │                                │── decompose_node
+   │                                │── retrieve (parallel)
+   │                                │── rerank
+   │                                │── reflect
+   │                                │── generate
+   │◄── {output, images[], events}──│
 ```
 
-### 11.3 SSE Event Types
+### 11.3 Response Format
 
-| Type | Fields | Description |
-|------|--------|-------------|
-| `start` | `session_id` | Stream started |
-| `agent_event` | `event: {agent, type, message}` | Pipeline node event |
-| `final` | `output, images[]` | Final answer + image metadata |
-| `image` | `image_id, image_b64, caption` | Full image data |
-| `error` | `message` | Error occurred |
-| `done` | — | Stream complete |
+| Field | Type | Description |
+|-------|------|-------------|
+| `output` | string | Final generated answer |
+| `images` | array | Retrieved images with metadata and base64 |
+| `events` | array | Agent events from pipeline nodes |
 
 ### 11.4 Agent Event Types
 

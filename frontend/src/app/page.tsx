@@ -4,11 +4,9 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import {
-  streamQuery,
+  queryDocuments,
   getOrCreateSession,
   linkSessionToUser,
-  AgentEvent,
-  StreamEvent,
   UploadedFile,
   RetrievedImage,
 } from "@/lib/api"
@@ -178,15 +176,9 @@ export default function Home() {
       const imagesForTurn: RetrievedImage[] = []
 
       try {
-        await streamQuery(query, sessionId, uploadedFiles, (event: StreamEvent) => {
-          if (event.type === "final") finalOutput = event.output
-          if (event.type === "image") {
-            imagesForTurn.push({ image_id: event.image_id, image_b64: event.image_b64, caption: event.caption })
-          }
-          if (event.type === "error") {
-            finalOutput = finalOutput || `Error: ${event.message}`
-          }
-        })
+        const result = await queryDocuments(query, sessionId, uploadedFiles)
+        finalOutput = result.output
+        imagesForTurn.push(...result.images)
 
         setMessages((prev) => [
           ...prev,

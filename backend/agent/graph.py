@@ -101,7 +101,7 @@ def final_node(state: AgentState) -> dict:
 
     stream_events.append({"agent": "final", "type": "complete", "message": msg})
 
-    # Carry forward retrieved_images so routes.py can send them in the final SSE event
+    # Carry forward retrieved_images so routes.py can include them in the response
     return {
         "final_answer": answer,
         "stream_events": stream_events,

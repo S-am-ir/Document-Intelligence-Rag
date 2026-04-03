@@ -31,7 +31,6 @@ Open `http://localhost:3000`. Upload document/s. Ask question's.
 | Reranking | BAAI/bge-reranker-base (278M, GPU) with clean-text scoring |
 | Agentic pipeline | LangGraph state machine: decompose → parallel retrieve → rerank → reflect → generate |
 | Model fallback | minimax-m2.5-free → openai/gpt-oss-120b → qwen/qwen3-32b with 429 handling |
-| Real-time streaming | SSE streaming of agent events and responses |
 | Observability | LangSmith tracing (optional, set `LANGCHAIN_TRACING_V2=true`) |
 | Auth | Optional Supabase authentication for saved conversations |
 
@@ -52,13 +51,13 @@ Open `http://localhost:3000`. Upload document/s. Ask question's.
 ```
                         ┌─────────────────────────────────────────────────┐
                         │              Frontend (Next.js)                 │
-                        │   Upload → Chat → SSE Stream → Render           │
+                        │   Upload → Chat → Response → Render            │
                         └────────────────────┬────────────────────────────┘
                                              │
                         ┌────────────────────▼────────────────────────────┐
                         │              FastAPI Backend                     │
                         │                                                  │
-                        │  POST /api/upload          POST /api/query/stream│
+                        │  POST /api/upload          POST /api/query       │
                         │       │                          │               │
                         │       ▼                          ▼               │
                         │  ┌──────────┐          ┌───────────────────┐    │
@@ -97,12 +96,10 @@ Open `http://localhost:3000`. Upload document/s. Ask question's.
 
 4. **Generation**: The top chunks (text + figure explanations) are sent to the LLM, which generates a grounded answer. The answer writes as if the model saw the figures, since VLM captions are in the context.
 
-5. **Streaming**: All events stream to the frontend in real-time via SSE.
-
 ## Documentation
 
 - **[Demo](docs/demo/DEMO.md)** — Screenshots from live sessions with real queries
-- **[Technical Breakdown](docs/TECHNICAL_WORKING.md)** — Deep dive into document processing, data structures, agentic pipeline, retrieval, storage schema, and SSE protocol
+- **[Technical Breakdown](docs/TECHNICAL_WORKING.md)** — Deep dive into document processing, data structures, agentic pipeline, retrieval, and storage schema
 
 ## Supported Formats
 

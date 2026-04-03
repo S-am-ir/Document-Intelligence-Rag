@@ -1,4 +1,3 @@
-import asyncio
 import json
 import shutil
 import sys
@@ -201,100 +200,83 @@ async def delete_file(session_id: str, filename: str):
     return {"deleted": filename}
 
 
-@router.post("/query/stream")
-async def stream_query(
+@router.post("/query")
+async def query(
     query: str = Form(...),
     session_id: str = Form(...),
     uploaded_files: str = Form(default="[]"),
 ):
     """
-    Main streaming endpoint. Runs the agentic RAG graph and streams
-    events back to the frontend via Server-Sent Events.
+    Main query endpoint. Runs the agentic RAG graph and returns the response.
     """
+    try:
+        files_list = json.loads(uploaded_files) if uploaded_files else []
+        print(
+            f"[query] session={session_id[:8]}… "
+            f"query='{query[:50]}' files={len(files_list)}"
+        )
 
-    async def gen():
-        try:
-            files_list = json.loads(uploaded_files) if uploaded_files else []
-            print(
-                f"[stream] session={session_id[:8]}… "
-                f"query='{query[:50]}' files={len(files_list)}"
-            )
+        history = [
+            (HumanMessage if m["role"] == "user" else AIMessage)(content=m["content"])
+            for m in get_session_messages(session_id)
+        ]
 
-            history = [
-                (HumanMessage if m["role"] == "user" else AIMessage)(
-                    content=m["content"]
-                )
-                for m in get_session_messages(session_id)
-            ]
+        initial: AgentState = {
+            "session_id": session_id,
+            "query": query,
+            "messages": history + [HumanMessage(content=query)],
+            "uploaded_files": files_list,
+            "doc_parse_results": [],
+            "sub_queries": [],
+            "raw_chunks": [],
+            "reranked_chunks": [],
+            "reflection_passed": False,
+            "retry_count": 0,
+            "final_answer": None,
+            "retrieved_images": [],
+            "stream_events": [],
+        }
 
-            initial: AgentState = {
-                "session_id": session_id,
-                "query": query,
-                "messages": history + [HumanMessage(content=query)],
-                "uploaded_files": files_list,
-                "doc_parse_results": [],
-                "sub_queries": [],
-                "raw_chunks": [],
-                "reranked_chunks": [],
-                "reflection_passed": False,
-                "retry_count": 0,
-                "final_answer": None,
-                "retrieved_images": [],
-                "stream_events": [],
-            }
+        final_answer = None
+        final_state: dict = {}
+        events: list = []
 
-            yield f"data: {json.dumps({'type': 'start', 'session_id': session_id})}\n\n"
+        async for chunk in compiled_graph.astream(
+            initial, config={"max_concurrency": 4}
+        ):
+            for node_name, node_state in chunk.items():
+                print(f"[query] Node completed: {node_name}")
+                node_events = node_state.get("stream_events", [])
+                events.extend(node_events)
+                if node_state.get("final_answer"):
+                    final_answer = node_state["final_answer"]
+                    final_state = node_state
 
-            # Track emitted events by identity to handle parallel node merging
-            emitted_events: set[int] = set()
-            final_answer = None
-            final_state: dict = {}
+        print(f"[query] Graph complete. final_answer length: {len(final_answer or '')}")
 
-            async for chunk in compiled_graph.astream(
-                initial, config={"max_concurrency": 4}
-            ):
-                for node_name, node_state in chunk.items():
-                    print(f"[stream] Node completed: {node_name}")
-                    events = node_state.get("stream_events", [])
-                    for event in events:
-                        eid = id(event)
-                        if eid not in emitted_events:
-                            emitted_events.add(eid)
-                            yield f"data: {json.dumps({'type': 'agent_event', 'event': event})}\n\n"
-                            await asyncio.sleep(0)
-                    if node_state.get("final_answer"):
-                        final_answer = node_state["final_answer"]
-                        final_state = node_state
+        images = final_state.get("retrieved_images", [])
+        save_turn(session_id, query, final_answer or "Done.")
 
-            print(
-                f"[stream] Graph complete. final_answer length: {len(final_answer or '')}"
-            )
-            images = final_state.get("retrieved_images", [])
-            yield f"data: {json.dumps({'type': 'final', 'output': final_answer or 'Done.', 'images': [{'image_id': i['image_id'], 'caption': i.get('caption', ''), 'source': i.get('source', ''), 'page': i.get('page', 0)} for i in images]})}\n\n"
+        return {
+            "output": final_answer or "Done.",
+            "events": events,
+            "images": [
+                {
+                    "image_id": i["image_id"],
+                    "caption": i.get("caption", ""),
+                    "source": i.get("source", ""),
+                    "page": i.get("page", 0),
+                    "image_b64": i.get("image_b64", ""),
+                }
+                for i in images
+            ],
+        }
 
-            # Stream individual images (potentially large — sent separately)
-            for img in images:
-                yield f"data: {json.dumps({'type': 'image', 'image_id': img['image_id'], 'image_b64': img.get('image_b64', ''), 'caption': img.get('caption', '')})}\n\n"
-                await asyncio.sleep(0)
-
-            save_turn(session_id, query, final_answer or "Done.")
-            yield f"data: {json.dumps({'type': 'done'})}\n\n"
-
-        except Exception as e:
-            exc_type, exc_value, exc_tb = sys.exc_info()
-            tb_text = "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
-            print(f"[stream] ═══ FATAL ERROR ═══")
-            print(tb_text)
-            print(f"[stream] ═══ END ERROR ═══")
-            error_msg = f"{exc_type.__name__}: {exc_value}" if exc_type else str(e)
-            yield f"data: {json.dumps({'type': 'error', 'message': error_msg, 'trace': tb_text[-500:]})}\n\n"
-            yield f"data: {json.dumps({'type': 'done'})}\n\n"
-
-    return StreamingResponse(
-        gen(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "X-Accel-Buffering": "no",
-        },
-    )
+    except Exception as e:
+        exc_type, exc_value, exc_tb = sys.exc_info()
+        tb_text = "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
+        print(f"[query] ═══ ERROR ═══")
+        print(tb_text)
+        print(f"[query] ═══ END ERROR ═══")
+        error_msg = f"{exc_type.__name__}: {exc_value}" if exc_type else str(e)
+        return {"error": error_msg, "trace": tb_text[-500:]}
