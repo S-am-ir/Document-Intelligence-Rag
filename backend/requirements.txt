@@ -1,0 +1,49 @@
+# Web framework
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+python-multipart==0.0.12
+python-dotenv==1.0.1
+
+# LangChain + LangGraph
+langchain==0.3.10
+langchain-core==0.3.25
+langchain-community==0.3.10
+langchain-openai==0.2.12
+langchain-huggingface==0.1.2
+langchain-postgres>=0.0.17
+langgraph==0.2.55
+
+# Embeddings
+sentence-transformers==3.3.1
+
+# Cross-encoder reranker
+# (sentence-transformers includes CrossEncoder — no extra install needed)
+# PostgreSQL
+psycopg2-binary==2.9.10
+pgvector>=0.3.6
+# Document processing (Docling)
+docling>=2.82.0
+docling-core>=2.70.0
+
+langchain-docling==0.2.0
+
+# Image processing
+pillow==11.1.0
+
+# Vision / LLM clients
+groq==0.13.1
+
+# Transformers tokenizer (for HybridChunker) + layout model support
+transformers>=4.50.0
+
+# Nomic embedder custom architecture dependency
+einops
+
+# Optional: file type detection
+python-magic==0.4.27
+
+# PDF fallback
+pypdf==5.1.0
+
+# LangSmith tracing (optional)
+langsmith==0.1.147

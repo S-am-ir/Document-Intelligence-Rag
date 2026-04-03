@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: #F7F6F3;
+  color: #111827;
+}
+
+/* Thin, subtle scrollbar */
+::-webkit-scrollbar       { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
+
+/* Textarea auto-height — field-sizing for modern browsers */
+textarea {
+  field-sizing: content;
+}
+
+/* Fallback for Firefox (field-sizing not supported) */
+@supports not (field-sizing: content) {
+  textarea {
+    overflow-y: hidden;
+    resize: none;
+  }
+}
