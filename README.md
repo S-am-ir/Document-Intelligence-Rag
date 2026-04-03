@@ -51,7 +51,7 @@ Open `http://localhost:3000`. Upload document/s. Ask question's.
 ```
                         ┌─────────────────────────────────────────────────┐
                         │              Frontend (Next.js)                 │
-                        │   Upload → Chat → Response → Render            │
+                        │            Upload → Chat → Response             │
                         └────────────────────┬────────────────────────────┘
                                              │
                         ┌────────────────────▼────────────────────────────┐
@@ -69,7 +69,7 @@ Open `http://localhost:3000`. Upload document/s. Ask question's.
                         │  ┌────▼─────┐          │ decompose         │    │
                         │  │ Groq VLM │          │    │              │    │
                         │  │ Caption  │          │ retrieve (parallel)│   │
-                        │  │ (14 imgs)│          │    │              │    │
+                        │  │          │          │    │              │    │
                         │  └────┬─────┘          │ rerank (bge)     │    │
                         │       │                │    │              │    │
                         │  ┌────▼─────┐          │ reflect ──► retry│   │
