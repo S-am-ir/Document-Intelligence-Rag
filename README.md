@@ -32,7 +32,6 @@ Open `http://localhost:3000`. Upload document/s. Ask question's.
 | Agentic pipeline | LangGraph state machine: decompose → parallel retrieve → rerank → reflect → generate |
 | Model fallback | minimax-m2.5-free → openai/gpt-oss-120b → qwen/qwen3-32b with 429 handling |
 | Observability | LangSmith tracing (optional, set `LANGCHAIN_TRACING_V2=true`) |
-| Auth | Optional Supabase authentication for saved conversations |
 
 ## Tech Stack
 
