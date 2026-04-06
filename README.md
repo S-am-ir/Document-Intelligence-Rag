@@ -1,4 +1,4 @@
-# Document Intelligence RAG
+# Agentic RAG
 
 An agentic Retrieval-Augmented Generation system that processes documents (PDFs, DOCX, CSVs, images) structurally using hybrid-chunking, extracts images/figures with VLM captioning, and answers questions with reflection loops.
 
