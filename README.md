@@ -48,7 +48,7 @@ Open `http://localhost:3000`. Upload document/s. Ask question's.
 
 ## Architecture
 
-![Architectural Diagram](docs/architectural_diagram.png)
+![Architectural Diagram](docs/demo/architectural_diagram.png)
 
 ## How It Works
 
