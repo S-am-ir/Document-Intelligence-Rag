@@ -73,6 +73,5 @@ PDF, DOCX, CSV, TXT, Markdown, images (PNG, JPG, WEBP).
 Copy `backend/.env.example` to `backend/.env` and set:
 - `OPENCODE_API_KEY` — Primary model (free tier available)
 - `GROQ_API_KEY` — VLM captioning + fallback models
-- `DATABASE_URL` — PostgreSQL connection (auto-set in Docker)
 - `LANGCHAIN_API_KEY` — (Optional) LangSmith tracing key
 
