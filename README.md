@@ -62,16 +62,4 @@ Open `http://localhost:3000`. Upload document/s. Ask question's.
 ## Documentation
 
 - **[Demo](docs/demo/DEMO.md)** — Screenshots from live sessions with real queries
-- **[Technical Breakdown](docs/TECHNICAL_WORKING.md)** — Deep dive into document processing, data structures, agentic pipeline, retrieval, and storage schema
-
-## Supported Formats
-
-PDF, DOCX, CSV, TXT, Markdown, images (PNG, JPG, WEBP).
-
-## Configuration
-
-Copy `backend/.env.example` to `backend/.env` and set:
-- `OPENCODE_API_KEY` — Primary model (free tier available)
-- `GROQ_API_KEY` — VLM captioning + fallback models
-- `LANGCHAIN_API_KEY` — (Optional) LangSmith tracing key
-
+- **[Technical Breakdown](docs/TECHNICAL_WORKING.md)**
