@@ -48,43 +48,7 @@ Open `http://localhost:3000`. Upload document/s. Ask question's.
 
 ## Architecture
 
-```
-                        ┌─────────────────────────────────────────────────┐
-                        │              Frontend (Next.js)                 │
-                        │            Upload → Chat → Response             │
-                        └────────────────────┬────────────────────────────┘
-                                             │
-                        ┌────────────────────▼────────────────────────────┐
-                        │              FastAPI Backend                     │
-                        │                                                  │
-                        │  POST /api/upload          POST /api/query       │
-                        │       │                          │               │
-                        │       ▼                          ▼               │
-                        │  ┌──────────┐          ┌───────────────────┐    │
-                        │  │ Docling  │          │   LangGraph       │    │
-                        │  │ Parser   │          │                   │    │
-                        │  │ (CUDA)   │          │ ingest ──► check  │    │
-                        │  └────┬─────┘          │    │        │     │    │
-                        │       │                │    ▼     no_docs   │    │
-                        │  ┌────▼─────┐          │ decompose         │    │
-                        │  │ Groq VLM │          │    │              │    │
-                        │  │ Caption  │          │ retrieve (parallel)│   │
-                        │  │          │          │    │              │    │
-                        │  └────┬─────┘          │ rerank (bge)     │    │
-                        │       │                │    │              │    │
-                        │  ┌────▼─────┐          │ reflect ──► retry│   │
-                        │  │ Nomic    │          │    │              │    │
-                        │  │ Embed    │          │ generate         │    │
-                        │  │ (768-dim)│          │    │              │    │
-                        │  └────┬─────┘          │ final            │    │
-                        │       │                └───────────────────┘    │
-                        │  ┌────▼─────┐                                   │
-                        │  │ PGVector │  ←── documents collection         │
-                        │  │ + images │  ←── doc_images table             │
-                        │  │ + index  │  ←── doc_index table              │
-                        │  └──────────┘                                   │
-                        └─────────────────────────────────────────────────┘
-```
+![Architectural Diagram](docs/architectural_diagram.png)
 
 ## How It Works
 
